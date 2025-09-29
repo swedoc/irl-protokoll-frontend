@@ -12,22 +12,45 @@
     <button type="submit">Skicka</button>
   </form>
   <p id="status"></p>
-  
-  <script>
-    const form = document.getElementById("uploadForm");
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const file = document.getElementById("audioFile").files[0];
-      if (!file) {
-        alert("Välj en fil först!");
+
+<script>
+  const BACKEND = "https://irl-protokoll-backend.onrender.com"; // backend-url
+
+  const form = document.getElementById("uploadForm");
+  const statusEl = document.getElementById("status");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const file = document.getElementById("audioFile").files[0];
+    if (!file) {
+      alert("Välj en fil först!");
+      return;
+    }
+    statusEl.textContent = "Skickar...";
+
+    try {
+      const fd = new FormData();
+      fd.append("file", file, file.name);
+
+      const res = await fetch(`${BACKEND}/upload`, {
+        method: "POST",
+        body: fd
+      });
+
+      if (!res.ok) {
+        const txt = await res.text();
+        statusEl.textContent = `Fel från servern (${res.status}): ${txt}`;
         return;
       }
-      document.getElementById("status").innerText = "Skickar...";
-      // Backend-anrop kommer här senare
-      setTimeout(() => {
-        document.getElementById("status").innerText = "Filen skickades (simulerat)";
-      }, 1500);
-    });
-  </script>
+
+      const data = await res.json();
+      statusEl.textContent = `Servern svarade: ${data.status} (${data.filename})`;
+    } catch (err) {
+      statusEl.textContent = `Nätverksfel: ${err}`;
+    }
+  });
+</script>
+
+ 
 </body>
 </html>
