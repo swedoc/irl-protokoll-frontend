@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <title>IRL Protokoll</title>
+</head>
+<body style="font-family:sans-serif; text-align:center; margin-top:50px;">
+  <h1>IRL Protokoll</h1>
+  <p>Ladda upp en ljudfil för transkribering:</p>
+  <form id="uploadForm">
+    <input type="file" id="audioFile" accept="audio/*">
+    <button type="submit">Skicka</button>
+  </form>
+  <p id="status"></p>
+  
+  <script>
+    const form = document.getElementById("uploadForm");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const file = document.getElementById("audioFile").files[0];
+      if (!file) {
+        alert("Välj en fil först!");
+        return;
+      }
+      document.getElementById("status").innerText = "Skickar...";
+      // Backend-anrop kommer här senare
+      setTimeout(() => {
+        document.getElementById("status").innerText = "Filen skickades (simulerat)";
+      }, 1500);
+    });
+  </script>
+</body>
+</html>
