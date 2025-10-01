@@ -3,54 +3,87 @@
 <head>
   <meta charset="UTF-8">
   <title>IRL Protokoll</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+    #status {
+      margin-top: 20px;
+      font-weight: bold;
+      white-space: pre-wrap;
+    }
+    #downloadBtn {
+      margin-top: 20px;
+      display: none;
+    }
+  </style>
 </head>
-<body style="font-family:sans-serif; text-align:center; margin-top:50px;">
+<body>
   <h1>IRL Protokoll</h1>
   <p>Ladda upp en ljudfil för transkribering:</p>
+  
   <form id="uploadForm">
     <input type="file" id="audioFile" accept="audio/*">
     <button type="submit">Skicka</button>
   </form>
+
   <p id="status"></p>
+  <button id="downloadBtn">Ladda ner som .txt</button>
 
-<script>
-  const BACKEND = "https://irl-protokoll-backend.onrender.com"; // backend-url
+  <script>
+    const BACKEND = "https://irl-protokoll-backend.onrender.com"; // backend-url
 
-  const form = document.getElementById("uploadForm");
-  const statusEl = document.getElementById("status");
+    const form = document.getElementById("uploadForm");
+    const statusEl = document.getElementById("status");
+    const downloadBtn = document.getElementById("downloadBtn");
+    let lastTranscription = "";
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const file = document.getElementById("audioFile").files[0];
-    if (!file) {
-      alert("Välj en fil först!");
-      return;
-    }
-    statusEl.textContent = "Skickar...";
-
-    try {
-      const fd = new FormData();
-      fd.append("file", file, file.name);
-
-      const res = await fetch(`${BACKEND}/upload`, {
-        method: "POST",
-        body: fd
-      });
-
-      if (!res.ok) {
-        const txt = await res.text();
-        statusEl.textContent = `Fel från servern (${res.status}): ${txt}`;
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const file = document.getElementById("audioFile").files[0];
+      if (!file) {
+        alert("Välj en fil först!");
         return;
       }
+      statusEl.textContent = "Skickar filen, vänta...";
+      downloadBtn.style.display = "none"; // göm knappen tills vi har ett resultat
 
-      const data = await res.json();
-      statusEl.textContent = `Servern svarade: ${data.status} (${data.filename})`;
-    } catch (err) {
-      statusEl.textContent = `Nätverksfel: ${err}`;
-    }
-  });
-</script>
+      try {
+        const fd = new FormData();
+        fd.append("file", file, file.name);
 
- 
+        const res = await fetch(`${BACKEND}/transcribe`, {
+          method: "POST",
+          body: fd
+        });
+
+        if (!res.ok) {
+          const txt = await res.text();
+          statusEl.textContent = `Fel från servern (${res.status}): ${txt}`;
+          return;
+        }
+
+        const data = await res.json();
+        lastTranscription = data.text;
+        statusEl.textContent = `Transkribering:\n\n${data.text}`;
+        downloadBtn.style.display = "inline-block"; // visa knappen
+      } catch (err) {
+        statusEl.textContent = `Nätverksfel: ${err}`;
+      }
+    });
+
+    downloadBtn.addEventListener("click", () => {
+      if (!lastTranscription) return;
+      const blob = new Blob([lastTranscription], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "transkribering.txt";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  </script>
 </body>
 </html>
