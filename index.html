@@ -108,7 +108,7 @@
   </footer>
 
   <script>
-    const BACKEND = "https://irl-protokoll-backend.onrender.com";
+    const BACKEND = "https://irl-protokoll-backend.onrender.com"; // byt till din backend-URL om du kör GPU
 
     const form = document.getElementById("uploadForm");
     const statusEl = document.getElementById("status");
@@ -132,6 +132,7 @@
       downloadProtocolBtn.style.display = "none";
 
       try {
+        // 1. Skicka ljudfilen till /transcribe
         const fd = new FormData();
         fd.append("file", file, file.name);
 
@@ -151,10 +152,23 @@
         statusEl.textContent = `✅ Transkribering klar:\n\n${data.text}`;
         downloadBtn.style.display = "inline-block";
 
-        // Här ska protokollhämtningen kopplas på Mistral 7B-backenden senare.
-        // Just nu simulerar vi det bara:
-        lastProtocol = "Detta är en plats för mötesprotokollet. När backend är klar dyker texten här.";
-        protocolEl.textContent = lastProtocol;
+        // 2. Skicka transkriptionen till /summarize
+        protocolEl.textContent = "⏳ Skapar protokoll...";
+        const res2 = await fetch(`${BACKEND}/summarize`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: lastTranscription })
+        });
+
+        if (!res2.ok) {
+          const txt = await res2.text();
+          protocolEl.textContent = `❌ Fel vid protokollgenerering (${res2.status}): ${txt}`;
+          return;
+        }
+
+        const data2 = await res2.json();
+        lastProtocol = data2.protocol;
+        protocolEl.textContent = `✅ Protokoll klart:\n\n${lastProtocol}`;
         downloadProtocolBtn.style.display = "inline-block";
 
       } catch (err) {
@@ -162,6 +176,7 @@
       }
     });
 
+    // Nedladdning av transkription
     downloadBtn.addEventListener("click", () => {
       if (!lastTranscription) return;
       const blob = new Blob([lastTranscription], { type: "text/plain" });
@@ -173,6 +188,7 @@
       URL.revokeObjectURL(url);
     });
 
+    // Nedladdning av protokoll
     downloadProtocolBtn.addEventListener("click", () => {
       if (!lastProtocol) return;
       const blob = new Blob([lastProtocol], { type: "text/plain" });
