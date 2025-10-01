@@ -27,7 +27,7 @@
     main {
       flex: 1;
       width: 100%;
-      max-width: 700px;
+      max-width: 800px;
       padding: 20px;
     }
 
@@ -61,7 +61,7 @@
       background: #2980b9;
     }
 
-    #status {
+    #status, #protocol {
       margin-top: 15px;
       font-weight: bold;
       white-space: pre-wrap;
@@ -84,6 +84,7 @@
   </header>
 
   <main>
+    <!-- Transkribering -->
     <div class="card">
       <h2>Ladda upp ljudfil</h2>
       <form id="uploadForm">
@@ -91,7 +92,14 @@
         <button type="submit">Skicka för transkribering</button>
       </form>
       <p id="status"></p>
-      <button id="downloadBtn" style="display:none;">📥 Ladda ner som .txt</button>
+      <button id="downloadBtn" style="display:none;">📥 Ladda ner transkription (.txt)</button>
+    </div>
+
+    <!-- Mötesprotokoll -->
+    <div class="card">
+      <h2>Mötesprotokoll</h2>
+      <p id="protocol">⏳ Protokollet genereras efter transkribering...</p>
+      <button id="downloadProtocolBtn" style="display:none;">📥 Ladda ner protokoll (.txt)</button>
     </div>
   </main>
 
@@ -100,12 +108,16 @@
   </footer>
 
   <script>
-    const BACKEND = "https://irl-protokoll-backend.onrender.com"; // backend-url
+    const BACKEND = "https://irl-protokoll-backend.onrender.com";
 
     const form = document.getElementById("uploadForm");
     const statusEl = document.getElementById("status");
     const downloadBtn = document.getElementById("downloadBtn");
+    const protocolEl = document.getElementById("protocol");
+    const downloadProtocolBtn = document.getElementById("downloadProtocolBtn");
+
     let lastTranscription = "";
+    let lastProtocol = "";
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -115,7 +127,9 @@
         return;
       }
       statusEl.textContent = "⏳ Skickar filen, vänta...";
+      protocolEl.textContent = "⏳ Väntar på transkribering innan protokoll kan skapas...";
       downloadBtn.style.display = "none";
+      downloadProtocolBtn.style.display = "none";
 
       try {
         const fd = new FormData();
@@ -136,6 +150,13 @@
         lastTranscription = data.text;
         statusEl.textContent = `✅ Transkribering klar:\n\n${data.text}`;
         downloadBtn.style.display = "inline-block";
+
+        // Här ska protokollhämtningen kopplas på Mistral 7B-backenden senare.
+        // Just nu simulerar vi det bara:
+        lastProtocol = "Detta är en plats för mötesprotokollet. När backend är klar dyker texten här.";
+        protocolEl.textContent = lastProtocol;
+        downloadProtocolBtn.style.display = "inline-block";
+
       } catch (err) {
         statusEl.textContent = `⚡ Nätverksfel: ${err}`;
       }
@@ -148,6 +169,17 @@
       const a = document.createElement("a");
       a.href = url;
       a.download = "transkribering.txt";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    downloadProtocolBtn.addEventListener("click", () => {
+      if (!lastProtocol) return;
+      const blob = new Blob([lastProtocol], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "protokoll.txt";
       a.click();
       URL.revokeObjectURL(url);
     });
