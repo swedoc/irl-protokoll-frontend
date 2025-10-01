@@ -5,32 +5,99 @@
   <title>IRL Protokoll</title>
   <style>
     body {
-      font-family: sans-serif;
-      text-align: center;
-      margin-top: 50px;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
     }
+
+    header {
+      background: #2c3e50;
+      color: #ecf0f1;
+      width: 100%;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 700px;
+      padding: 20px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    h1, h2 {
+      margin: 0 0 15px;
+    }
+
+    input[type="file"] {
+      margin: 10px 0;
+    }
+
+    button {
+      background: #3498db;
+      border: none;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background: #2980b9;
+    }
+
     #status {
-      margin-top: 20px;
+      margin-top: 15px;
       font-weight: bold;
       white-space: pre-wrap;
+      text-align: left;
     }
-    #downloadBtn {
-      margin-top: 20px;
-      display: none;
+
+    footer {
+      background: #2c3e50;
+      color: #bdc3c7;
+      text-align: center;
+      padding: 10px;
+      font-size: 13px;
     }
   </style>
 </head>
 <body>
-  <h1>IRL Protokoll</h1>
-  <p>Ladda upp en ljudfil för transkribering:</p>
-  
-  <form id="uploadForm">
-    <input type="file" id="audioFile" accept="audio/*">
-    <button type="submit">Skicka</button>
-  </form>
+  <header>
+    <h1>IRL Protokoll</h1>
+    <p>Från ljud → text → protokoll</p>
+  </header>
 
-  <p id="status"></p>
-  <button id="downloadBtn">Ladda ner som .txt</button>
+  <main>
+    <div class="card">
+      <h2>Ladda upp ljudfil</h2>
+      <form id="uploadForm">
+        <input type="file" id="audioFile" accept="audio/*">
+        <button type="submit">Skicka för transkribering</button>
+      </form>
+      <p id="status"></p>
+      <button id="downloadBtn" style="display:none;">📥 Ladda ner som .txt</button>
+    </div>
+  </main>
+
+  <footer>
+    IRL Protokollisten © 2025
+  </footer>
 
   <script>
     const BACKEND = "https://irl-protokoll-backend.onrender.com"; // backend-url
@@ -47,8 +114,8 @@
         alert("Välj en fil först!");
         return;
       }
-      statusEl.textContent = "Skickar filen, vänta...";
-      downloadBtn.style.display = "none"; // göm knappen tills vi har ett resultat
+      statusEl.textContent = "⏳ Skickar filen, vänta...";
+      downloadBtn.style.display = "none";
 
       try {
         const fd = new FormData();
@@ -61,16 +128,16 @@
 
         if (!res.ok) {
           const txt = await res.text();
-          statusEl.textContent = `Fel från servern (${res.status}): ${txt}`;
+          statusEl.textContent = `❌ Fel från servern (${res.status}): ${txt}`;
           return;
         }
 
         const data = await res.json();
         lastTranscription = data.text;
-        statusEl.textContent = `Transkribering:\n\n${data.text}`;
-        downloadBtn.style.display = "inline-block"; // visa knappen
+        statusEl.textContent = `✅ Transkribering klar:\n\n${data.text}`;
+        downloadBtn.style.display = "inline-block";
       } catch (err) {
-        statusEl.textContent = `Nätverksfel: ${err}`;
+        statusEl.textContent = `⚡ Nätverksfel: ${err}`;
       }
     });
 
