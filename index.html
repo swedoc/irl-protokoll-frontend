@@ -108,7 +108,8 @@
   </footer>
 
   <script>
-    const BACKEND = "https://irl-protokoll-backend.onrender.com"; // byt till din backend-URL om du kör GPU
+    // Här anger vi Elastic IP för din EC2-backend
+    const BACKEND = "http://18.158.202.164:5000";
 
     const form = document.getElementById("uploadForm");
     const statusEl = document.getElementById("status");
